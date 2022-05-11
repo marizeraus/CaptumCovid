@@ -122,4 +122,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 import os
-MODELS = os.path.join(BASE_DIR, 'ml/models')
+MODELS = BASE_DIR
