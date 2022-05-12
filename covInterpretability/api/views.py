@@ -18,7 +18,7 @@ class CaptumVisualizationBase(APIView):
         text = data['text']
 
         viz = captumView(text, model, 0)
-        response_dict = {"Predicted Weight (kg)": viz}
+        response_dict = {"viz": viz}
         return Response(response_dict, status=200)
 
 
@@ -29,7 +29,7 @@ class CaptumVisualizationOthers(APIView):
         text = data['text']
 
         viz = captumView(text, model, 1)
-        response_dict = {"Predicted Weight (kg)": viz}
+        response_dict = {"viz": viz}
         return Response(response_dict, status=200)
 
 
