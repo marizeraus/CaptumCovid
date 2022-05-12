@@ -3,6 +3,7 @@ from django.shortcuts import render
 import numpy as np
 
 from .eval import predict
+from .eval import preProcessText
 
 from .captum import captumView
 from .apps import ApiConfig
@@ -15,9 +16,10 @@ class CaptumVisualizationBase(APIView):
         data = request.data
         model = ApiConfig.modelBert
 
-        text = data['text']
+        text = preProcessText(data['text'])
+        value = int(data['class'])
 
-        viz = captumView(text, model, 0)
+        viz = captumView(text, model, value, 0)
         response_dict = {"viz": viz}
         return Response(response_dict, status=200)
 
@@ -26,9 +28,9 @@ class CaptumVisualizationOthers(APIView):
     def post(self, request):
         model = ApiConfig.modelBertOthers
         data = request.data
-        text = data['text']
-
-        viz = captumView(text, model, 1)
+        text = preProcessText(data['text'])
+        value = int(data['class'])
+        viz = captumView(text, model, value, 1)
         response_dict = {"viz": viz}
         return Response(response_dict, status=200)
 
@@ -36,8 +38,11 @@ class CaptumVisualizationOthers(APIView):
 class Prediction(APIView):
     def post(self, request):
         data = request.data
-        text = data['text']
+        text = preProcessText(data['text'])
 
         viz = predict(text, False)
-        response_dict = {"prediction": ApiConfig.label_dict[viz]}
+        response_dict = {
+            "prediction": ApiConfig.label_dict[viz],
+            "class": viz
+            }
         return Response(response_dict, status=200)

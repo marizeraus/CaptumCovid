@@ -70,14 +70,14 @@ def custom_forward_bertimbau_others(inputs):
     return predict_bertimbau_others(inputs)
 
 
-def captumView(text, model, type):
+def captumView(text, model, value, type):
     if(type == 0):
         ig_base = LayerIntegratedGradients(custom_forward_bertimbau,
                                         model.bert.embeddings)
     else:
         ig_base = LayerIntegratedGradients(custom_forward_bertimbau_others,
                                         model.bert.embeddings)
-    data = viz_base(text, 1, 1, ig_base, model)
+    data = viz_base(text, value, value, ig_base, model)
     return data
 
 def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, delta, vis_data_records):

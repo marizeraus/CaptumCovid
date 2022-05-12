@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-
+from unidecode import unidecode
 from .apps import ApiConfig
 
 label_others = {
@@ -34,3 +34,8 @@ def predict(_text, is_other):
           prediction = predict(_text, True)
           prediction = label_others[prediction]
         return prediction
+
+def preProcessText(text):
+    text = unidecode(text)
+    text = text.replace(r"[^a-zA-Z ]","")
+    return text
