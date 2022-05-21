@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from unidecode import unidecode
 from .apps import ApiConfig
-
+import re 
 label_others = {
     0: 2,
     1: 3,
@@ -38,4 +38,5 @@ def predict(_text, is_other):
 def preProcessText(text):
     text = unidecode(text)
     text = text.replace(r"[^a-zA-Z ]","")
+    text = re.sub(r"http\S+", "", text)
     return text
