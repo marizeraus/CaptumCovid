@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from unidecode import unidecode
 from .apps import ApiConfig
-import re 
+import re, string
 label_others = {
     0: 2,
     1: 3,
