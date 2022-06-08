@@ -2,7 +2,6 @@ from django.shortcuts import render
 
 import numpy as np
 import requests
-from sympy import content
 import json
 
 from .eval import predict
