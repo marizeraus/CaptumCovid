@@ -14,6 +14,7 @@ def predict_bertimbau(inputs):
     pooled_output = model(inputs).logits
     return pooled_output
 
+
 def predict_bertimbau_others(inputs):
     model = ApiConfig.modelBertOthers
 
@@ -66,6 +67,7 @@ def construct_input_ref_pos_id_pair(input_ids):
 def custom_forward_bertimbau(inputs):
     return predict_bertimbau(inputs)
 
+
 def custom_forward_bertimbau_others(inputs):
     return predict_bertimbau_others(inputs)
 
@@ -73,12 +75,13 @@ def custom_forward_bertimbau_others(inputs):
 def captumView(text, model, value, type):
     if(type == 0):
         ig_base = LayerIntegratedGradients(custom_forward_bertimbau,
-                                        model.bert.embeddings)
+                                           model.bert.embeddings)
     else:
         ig_base = LayerIntegratedGradients(custom_forward_bertimbau_others,
-                                        model.bert.embeddings)
-    data = viz_base(text, value, value, ig_base, model)
-    return data
+                                           model.bert.embeddings)
+    data, attr, texto = viz_base(text, value, value, ig_base, model)
+    return data, attr, texto
+
 
 def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, delta, vis_data_records):
     attributions = attributions.sum(dim=2).squeeze(0)
@@ -95,6 +98,7 @@ def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, de
                             attributions.sum(),
                             text,
                             delta))
+    return attributions, text
 
 
 def detokenize_attributions(attributions, textt):
@@ -143,7 +147,51 @@ def viz_base(text, label, target, ig_base, model):
     logits = output.logits.detach().cpu().numpy()
     prediction = np.argmax(logits)
     pred = np.max(logits)
+    attributions, texto = add_attributions_to_visualizer(
+        attributions, all_tokens, pred, prediction, label, delta, viz)
+    _ = visualization.visualize_text(viz)
+    return _.data, attributions, texto
+
+
+def text_base(text, label, type, target, model):
+    if(type == 0):
+        ig_base = LayerIntegratedGradients(custom_forward_bertimbau,
+                                           model.bert.embeddings)
+    else:
+        ig_base = LayerIntegratedGradients(custom_forward_bertimbau_others,
+                                           model.bert.embeddings)
+
+    tokenizer = ApiConfig.tokenizer_bertimbau
+
+    currText = tokenizer.encode_plus(
+        text,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        return_tensors='pt')
+    input_ids = currText['input_ids']
+    indices = input_ids[0].detach().tolist()
+    all_tokens = tokenizer.convert_ids_to_tokens(indices)
+    baseline = torch.zeros(input_ids.shape, dtype=torch.int64)
+    print(type, target)
+    attributions, delta = ig_base.attribute(inputs=input_ids,
+                                            baselines=baseline,
+                                            target=target,
+                                            n_steps=200,
+                                            internal_batch_size=5,
+                                            return_convergence_delta=True)
+    viz = []
+    output = model(input_ids)
+    logits = output.logits.detach().cpu().numpy()
+    prediction = np.argmax(logits)
+    pred = np.max(logits)
+
     add_attributions_to_visualizer(
         attributions, all_tokens, pred, prediction, label, delta, viz)
     _ = visualization.visualize_text(viz)
-    return _.data
+
+    attributions = attributions.sum(dim=2).squeeze(0)
+    attributions = attributions / torch.norm(attributions)
+    attributions = attributions.cpu().detach().numpy()
+    attributions, text = detokenize_attributions(attributions.tolist(), text)
+
+    return attributions, text, _.data
