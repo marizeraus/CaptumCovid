@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from unidecode import unidecode
 from .apps import ApiConfig
-
+import re, string
 label_others = {
     0: 2,
     1: 3,
@@ -34,8 +34,23 @@ def predict(_text, is_other):
           prediction = predict(_text, True)
           prediction = label_others[prediction]
         return prediction
+    
+def strip_all_entities(text):
+    entity_prefixes = ['@','#']
+    for separator in  string.punctuation:
+        if separator not in entity_prefixes :
+            text = text.replace(separator,' ')
+    words = []
+    for word in text.split():
+        word = word.strip()
+        if word:
+            if word[0] not in entity_prefixes:
+                words.append(word)
+    return ' '.join(words)
 
 def preProcessText(text):
     text = unidecode(text)
     text = text.replace(r"[^a-zA-Z ]","")
+    text = re.sub(r"http\S+", "", text)
+    text = strip_all_entities(text)
     return text
